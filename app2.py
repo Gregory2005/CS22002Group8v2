@@ -1,20 +1,28 @@
 from flask import Flask, request, jsonify, render_template
 from flask_sqlalchemy import SQLAlchemy
 from flask_bcrypt import Bcrypt
-from flask_jwt_extended import JWTManager, jwt_required, create_access_token, get_jwt_identity, get_jwt
-from flask_jwt_extended import verify_jwt_in_request
+from flask_jwt_extended import (
+    JWTManager, jwt_required, create_access_token,
+    get_jwt_identity, get_jwt, verify_jwt_in_request
+)
 from flask_jwt_extended.exceptions import NoAuthorizationError
 import requests
+from datetime import timedelta
 
 app = Flask(__name__)
 
+# Configuration
 app.config['SQLALCHEMY_DATABASE_URI'] = 'sqlite:///movie_site.db'
 app.config['JWT_SECRET_KEY'] = 'Test1Geniuelly'
+app.config['JWT_ACCESS_TOKEN_EXPIRES'] = timedelta(hours=1)
+app.config['SQLALCHEMY_TRACK_MODIFICATIONS'] = False
+
+# Initialize extensions
 db = SQLAlchemy(app)
 bcrypt = Bcrypt(app)
 jwt = JWTManager(app)
 
-#tables working
+# Models
 class Movie(db.Model):
     id = db.Column(db.Integer, primary_key=True)
     title = db.Column(db.String(200), nullable=False)
@@ -34,8 +42,21 @@ class Rating(db.Model):
     movie_id = db.Column(db.Integer, db.ForeignKey('movie.id'), nullable=False)
     rating = db.Column(db.Integer, nullable=False)
 
-#Routing stuff working 
-@app.route('/') 
+# Inject JWT data into templates
+@app.context_processor
+def inject_admin_status():
+    try:
+        verify_jwt_in_request(optional=True)
+        user = get_jwt_identity()
+        is_admin = user["is_admin"] if user else False
+        username = user["username"] if user else None
+    except Exception:
+        is_admin = False
+        username = None
+    return dict(is_admin=is_admin, username=username)
+
+# Routes
+@app.route('/')
 def index():
     return render_template('loginFlask.html')
 
@@ -44,22 +65,26 @@ def signup():
     return render_template('signupFlask.html')
 
 @app.route('/home')
+@jwt_required(optional=True)
 def home():
     return render_template('home.html')
 
 @app.route('/settings')
+@jwt_required()
 def settings():
     return render_template('settings.html')
 
 @app.route('/users')
+@jwt_required()
 def users():
+    if not get_jwt_identity()['is_admin']:
+        return render_template('unauthorized.html'), 403
     return render_template('users.html')
 
 @app.route('/moviepage')
 def moviepage():
     return render_template('movies.html')
 
-#login and register working
 @app.route('/login', methods=['POST'])
 def login():
     data = request.get_json()
@@ -90,7 +115,38 @@ def register():
     except Exception as e:
         return jsonify({"error": str(e)}), 400
 
-#home page stuff working
+@app.route('/api/users', methods=['GET'])
+@jwt_required()
+def get_users():
+    current_user = get_jwt_identity()
+    if not current_user["is_admin"]:
+        return jsonify({"error": "admins only"}), 403
+
+    users = User.query.all()
+    users_data = [
+        {
+            "id": user.id,
+            "username": user.username,
+        }
+        for user in users
+    ]
+    return jsonify(users_data), 200
+
+@app.route('/api/users/<int:id>', methods=['DELETE'])
+@jwt_required()
+def delete_user(id):
+    current = get_jwt_identity()
+    if not current['is_admin']:
+        return jsonify({"error": "Admin access required"}), 403
+    if id == current['id']:
+        return jsonify({"error": "Cannot delete your own account"}), 400
+    user = User.query.get(id)
+    if not user:
+        return jsonify({"error": "User not found"}), 404
+    db.session.delete(user)
+    db.session.commit()
+    return jsonify({"message": "User deleted successfully"}), 200
+
 @app.route('/movies/search', methods=['GET'])
 def search_movies():
     query = request.args.get('query', '').lower()
@@ -172,7 +228,6 @@ def populate_movies():
     except Exception as e:
         return jsonify({"error": f"Failed to save movies to the database: {str(e)}"}), 500
 
-#not working
 @app.route('/password-update', methods=['PUT'])
 @jwt_required()
 def password_update():
@@ -201,45 +256,6 @@ def password_update():
     except Exception as e:
         print("Exception during password update:", str(e))
         return jsonify({"error": f"Internal error: {str(e)}"}), 500
-
-@app.route('/api/users', methods=['GET'])
-@jwt_required()
-def get_users():
-    current_user = get_jwt_identity()
-    if not current_user["is_admin"]:
-        return jsonify({"error": "admins only"}), 403
-
-    users = User.query.all()
-    users_data = [
-        {
-            "id": user.id,
-            "username": user.username,
-        }
-        for user in users
-    ]
-    return jsonify(users_data), 200
-
-
-@app.route('/users/<int:id>', methods=['DELETE'])
-@jwt_required()
-def delete_user(id):
-    claims = get_jwt()
-    user_data = get_jwt_identity()
-    user_id = user_data["id"]
-    if not claims.get("is_admin"):
-        return jsonify({"error": "Access denied – admin only"}), 403
-    if int(user_id) == id:
-        return jsonify({"error": "Admin can't delete own account"}), 400
-    user = User.query.get(id)
-    if not user:
-        return jsonify({"error": "User not found"}), 404
-    try:
-        db.session.delete(user)
-        db.session.commit()
-        return jsonify({"message": "User deleted successfully."}), 200
-    except:
-        return jsonify({"error": "User deletion failed."}), 500
-
 
 @app.route('/movies', methods=['POST'])
 @jwt_required()
@@ -302,17 +318,15 @@ def delete_movie(id):
     db.session.commit()
     return jsonify({"message": f"Movie '{movie_title}' deleted"}), 200
 
-
-#create admin and start up all working
 def create_admin_account():
-    if User.query.filter_by(is_admin=True).first() is None:
-        hashed_password = bcrypt.generate_password_hash("adminpassword").decode("utf-8")
-        admin_user = User(username="admin", password=hashed_password, is_admin=True)
-        db.session.add(admin_user)
+    if not User.query.filter_by(is_admin=True).first():
+        db.session.add(User(
+            username="admin",
+            password=bcrypt.generate_password_hash("adminpassword").decode('utf-8'),
+            is_admin=True
+        ))
         db.session.commit()
-        return jsonify({"message": "admin account created"}), 201
-    else:
-        return jsonify({"message": "admin not created"}), 200
+        print("Admin account created")
 
 if __name__ == '__main__':
     with app.app_context():
