@@ -13,19 +13,19 @@ My SQL was also used to create our database, which was used to store user profil
 
 MAIN FEATURES:
 
-Client:
- - We have a movie discovery feature, where users can browse different movies and geners.
- - The app has movie descriptions and rating that users can see. They also have titles and posters
- - Users can rate movies
- - Authentication, users have to enter their user ID and password
- - Updating security information
- - Responsive design
-   
-Admin:
-- We have an Admin dashboard which is a seperate interface, which is used by admins to manage the movies and users
-- CRUD operations allow the admin user to edit, delete and add movies to the database
-- Content moderation
-- Authentication, which allows only the admin accounts to be able to access the interface
+  Client:
+   - We have a movie discovery feature, where users can browse different movies and geners.
+   - The app has movie descriptions and rating that users can see. They also have titles and posters
+   - Users can rate movies
+   - Authentication, users have to enter their user ID and password
+   - Updating security information
+   - Responsive design
+     
+  Admin:
+  - We have an Admin dashboard which is a seperate interface, which is used by admins to manage the movies and users
+  - CRUD operations allow the admin user to edit, delete and add movies to the database
+  - Content moderation
+  - Authentication, which allows only the admin accounts to be able to access the interface
 
 TEAM MEMBERS: 
 
