@@ -1,8 +1,8 @@
-# CS22002Group8v2
+# MOVIEHUB
 
 Team8 - CS22022 Web statck development Assingnmnet 2
 
-**OVERVIEW: **
+**OVERVIEW:**
 
 Our web application is called MovieHub. It is designed to help users find movies effortlessly and that are tailored to their preference. This app allows users to rate movies that they have seen and access movies that are similar to them. Users do have to login to their account to have access to the site and to rate films. The app also has an admin dashboard where the admins can delete movies and update passwords ect.This ensures that content always stays up to date. 
 **
