@@ -1,6 +1,6 @@
 # MOVIEHUB
 
-Team8 - CS22022 Web statck development Assingnmnet 2
+Team8 - CS22022 Web statck development Assignment 2
 
 **OVERVIEW:**
 
