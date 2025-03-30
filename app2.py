@@ -75,10 +75,7 @@ def settings():
     return render_template('settings.html')
 
 @app.route('/users')
-@jwt_required()
 def users():
-    if not get_jwt_identity()['is_admin']:
-        return render_template('unauthorized.html'), 403
     return render_template('users.html')
 
 @app.route('/moviepage')
