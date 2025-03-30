@@ -8,7 +8,8 @@ Our web application is called MovieHub. It is designed to help users find movies
 
 **OUR IMPLEMENTATION:**
 
-For our front end we used HTML to create our application along with CSS on VS code to ensure we had a dynamic but also stylish interface. For our back end implentation we used flask. for this we were able to build RESTful APIs. We chose this for its flexibility and simplicity. 
+For our **front end** we used HTML to create our application along with CSS on VS code to ensure we had a dynamic but also stylish interface. 
+For our **back end** implentation we used flask. for this we were able to build RESTful APIs. We chose this for its flexibility and simplicity. 
 My SQL was also used to create our database, which was used to store user profiles, ratings and movies. 
 
 **MAIN FEATURES:**
