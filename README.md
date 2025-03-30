@@ -30,6 +30,7 @@ MAIN FEATURES:
 TEAM MEMBERS: 
 
 (Thomas, Gregory, Martin, Ryan, Finn)
+
 All team members were present during study group session. During the project roles were allocated for different parts of the assignment. Several meetings took place in QMB and Library
 
 
