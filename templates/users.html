@@ -3,21 +3,108 @@
 {% block title %}Manage Users{% endblock %}
 
 {% block content %}
-
-
-
 <h2>User List</h2>
-<table id="userTable" class="table">
+
+<table id="userTable">
     <thead>
         <tr>
             <th>ID</th>
             <th>Username</th>
-            <th>Admin Status</th>
+            <th>Role</th>
             <th>Actions</th>
         </tr>
     </thead>
-    <tbody id="userTableBody">
-
+    <tbody>
+        <tr id="loadingRow">
+            <td colspan="4" class="text-center">Loading users...</td>
+        </tr>
     </tbody>
 </table>
+
+<script>
+document.addEventListener("DOMContentLoaded", function () {
+    fetchUsers();
+    window.username = "{{ username }}";
+});
+
+async function fetchUsers() {
+    try {
+        const token = localStorage.getItem("access_token");
+        if (!token) throw new Error("Not logged in");
+
+        const response = await fetch("/api/users", {
+            headers: { "Authorization": `Bearer ${token}` }
+        });
+
+        const data = await response.json();
+        if (!response.ok) throw new Error(data.error || 'Failed to fetch users');
+
+        renderUsers(data);
+    } catch (error) {
+        showError(error);
+        console.error("Fetch users error:", error);
+    }
+}
+
+function renderUsers(users) {
+    const userTableBody = document.querySelector("#userTable tbody");
+
+    if (!users.length) {
+        userTableBody.innerHTML = `<tr><td colspan="4">No users found</td></tr>`;
+        return;
+    }
+
+    userTableBody.innerHTML = users.map(user => `
+        <tr>
+            <td>${user.id}</td>
+            <td>${user.username}</td>
+            <td>${user.is_admin ? 'Admin' : 'User'}</td>
+            <td>
+                ${window.username !== user.username ? `
+                <button class="btn delete-btn" onclick="deleteUser(${user.id})">🗑 Delete</button>` : 'Current user'}
+            </td>
+        </tr>
+    `).join('');
+}
+
+async function deleteUser(userId) {
+    if (!confirm("Are you sure you want to delete this user?")) return;
+
+    try {
+        const token = localStorage.getItem("access_token");
+        const response = await fetch(`/api/users/${userId}`, {
+            method: "DELETE",
+            headers: { "Authorization": `Bearer ${token}` }
+        });
+
+        const data = await response.json();
+        if (!response.ok) throw new Error(data.error || 'Delete failed');
+
+        alert("User deleted successfully");
+        fetchUsers();
+    } catch (error) {
+        alert(error.message);
+        console.error("Delete user error:", error);
+    }
+}
+
+function showError(error) {
+    const userTableBody = document.querySelector("#userTable tbody");
+    userTableBody.innerHTML = `
+        <tr>
+            <td colspan="4" class="error">Error: ${error.message}</td>
+        </tr>
+    `;
+}
+</script>
+
+<style>
+#userTable { width: 100%; border-collapse: collapse; margin-top: 20px; }
+#userTable th, #userTable td { padding: 12px; border-bottom: 1px solid #ddd; text-align: left; }
+#userTable th { background-color: #f2f2f2; }
+.delete-btn { background-color: #dc3545; color: white; border: none; padding: 6px 12px; border-radius: 4px; cursor: pointer; }
+.delete-btn:hover { background-color: #c82333; }
+.error { color: red; text-align: center; }
+.text-center { text-align: center; }
+</style>
 {% endblock %}
