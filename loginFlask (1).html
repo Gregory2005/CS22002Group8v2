@@ -1,0 +1,52 @@
+{% extends 'index.html' %}
+
+{% block title %} Login  {% endblock %}
+
+{% block body %}
+<h1>Login</h1>
+        <form id="loginForm">
+            <div class="form-group">
+                <label for="username">Username</label>
+                <input type="text" id="username" name="username" required>
+            </div>
+            <div class="form-group">
+                <label for="password">Password</label>
+                <input type="password" id="password" name="password" required>
+            </div>
+            <button type="submit" class="login-btn">Login</button>
+        </form>
+        <div class="register-link">
+            <p>Don't have an account? <a href="/signup">Register here</a></p>
+        </div>
+        <script>
+            document.getElementById("loginForm").addEventListener("submit", function (e) {
+                e.preventDefault();
+            
+                const username = document.getElementById("username").value;
+                const password = document.getElementById("password").value;
+            
+                fetch("/login", {
+                    method: "POST",
+                    headers: {
+                        "Content-Type": "application/json"
+                    },
+                    body: JSON.stringify({ username, password })
+                })
+                .then(response => response.json())
+                .then(data => {
+                    if (data.token) {
+                        localStorage.setItem("access_token", data.token);
+                        localStorage.setItem("is_admin", data.is_admin ? "true" : "false");
+                        window.location.href = "/home";
+                    } else {
+                        alert("Error: " + data.error);
+                    }
+                })
+                .catch((err) => {
+                    alert("Something went wrong. Try again later.");
+                    console.error(err);
+                });
+            });
+            </script>
+            
+{% endblock %}

@@ -1,0 +1,28 @@
+{% extends "base.html" %}
+
+{% block title %}Manage Movies{% endblock %}
+
+
+{% block content %}
+<h2>Movie List</h2>
+<button onclick="openMovieModal()">➕ Add Movie</button>
+
+<table id="movieTable">
+    <thead>
+        <tr>
+            <th>Image</th>
+            <th>Title</th>
+            <th>Description</th>
+            <th>Actions</th>
+        </tr>
+    </thead>
+    <tbody>
+        <tr id="movie-1">
+            <td><img src="../static/example-movie.jpg" class="movie-img" alt="Movie Image"></td>
+            <td>Example Movie</td>
+            <td>Action</td>
+            <td><button onclick="deleteMovie(1)">🗑 Delete</button></td>
+        </tr>
+    </tbody>
+</table>
+{% endblock %}

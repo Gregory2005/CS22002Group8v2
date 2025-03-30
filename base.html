@@ -1,0 +1,35 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>{% block title %}Admin Dashboard{% endblock %}</title>
+    <link rel="stylesheet" href="../static/home.css">
+
+</head>
+<body>
+    <script>
+        document.addEventListener("DOMContentLoaded", function () {
+            const isAdmin = localStorage.getItem("is_admin") === "true";
+    
+            if (!isAdmin) {
+                document.getElementById("admin-links").style.display = "none";
+            }
+        });
+    </script>
+    <nav>
+        <h1>MovieHub</h1>
+        <ul>
+            <li><a href="/home">Home</a></li>
+            <span id="admin-links">
+                <li><a href="/moviepage">Movies</a></li>
+                <li><a href="/users">Users</a></li>
+            </span>
+            <li><a href="/settings">Settings</a></li>
+        </ul>
+    </nav>
+
+    {% block content %}{% endblock %}
+
+</body>
+</html>

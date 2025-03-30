@@ -1,0 +1,67 @@
+{% extends "base.html" %}
+
+{% block title %}Settings{% endblock %}
+
+{% block content %}
+<h2>Application Settings</h2>
+
+<section class="settings-section">
+    <h3>Change Password</h3>
+    <label for="oldPassword">Current Password:</label>
+    <input type="password" id="oldPassword" placeholder="Enter current password">
+
+    <label for="newPassword">New Password:</label>
+    <input type="password" id="newPassword" placeholder="Enter new password">
+
+    <button onclick="changePassword()">Update Password</button>
+</section>
+
+<section class="settings-section">
+    <button onclick="logout()" style="background-color: red; color: white;">Logout</button>
+</section>
+
+<script>
+function logout() {
+    localStorage.removeItem("access_token");
+    localStorage.removeItem("is_admin");
+    window.location.href = "/";
+}
+
+function changePassword() {
+    const currentPassword = document.getElementById("oldPassword").value;
+    const newPassword = document.getElementById("newPassword").value;
+
+    const token = localStorage.getItem("access_token");
+    if (!token) {
+        alert("You must be logged in.");
+        return;
+    }
+
+    fetch("/password-update", {
+        method: "PUT",
+        headers: {
+            "Content-Type": "application/json",
+            "Authorization": "Bearer " + token
+        },
+        body: JSON.stringify({
+            current_password: currentPassword,
+            new_password: newPassword
+        })
+    })
+    .then(async (res) => {
+        const contentType = res.headers.get("content-type");
+        if (contentType && contentType.includes("application/json")) {
+            const data = await res.json();
+            alert(data.error || data.message || "No message returned.");
+        } else {
+            const text = await res.text();
+            alert(text || "No response body.");
+        }
+    })
+    .catch(err => {
+        console.error(err);
+        alert("Error updating password.");
+    });
+}
+</script>
+{% endblock %}
